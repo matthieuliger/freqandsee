@@ -37,7 +37,7 @@ Contains helper functions (e.g., bilinear transformation, Hollos method, and uni
 
 ### Basic Demo Notebook
 
-[Notebook](demo/_notebooks/basic_demo.ipynb)
+[Notebook](demo_notebooks/basic_demo.ipynb)
 
 #### Description
 
@@ -52,7 +52,7 @@ Explores other aspects of the library, such as creating white noise and possibly
 
 ### Filtering Demo Notebook
 
-[Notebook](demo_notebooks/filtering_demo.ipynb}
+[Notebook](demo_notebooks/filtering_demo.ipynb)
 
 #### Description
 
