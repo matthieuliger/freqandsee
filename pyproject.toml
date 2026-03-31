@@ -16,7 +16,8 @@ seaborn = "^0.13.2"
 humanize = "^4.9.0"
 pandas-stubs = "^2.2.0.240218"
 scipy = "^1.12.0"
-astropy = "^6.0.0"
+astropy = "^7.0.0"
+yfinance = "^1.2.0"
 sphinx-astropy = "^1.9.1"
 
 

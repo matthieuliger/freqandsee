@@ -1,101 +1,84 @@
 # freqandsee
 
-This repository provides a high-level signal processing library called
-`freqandsee`, designed for analyzing and manipulating time-series data. The
-library is built on top of `numpy` and `astropy`, providing a flexible
-framework for handling signals with various characteristics, including noise
-types and filtering techniques. `astropy` is used for unit handling.
+A high-level signal processing library for analyzing and manipulating
+time-series data, built on top of `numpy`, `scipy`, and `astropy` (for unit
+handling).
 
-## Files
+## Installation
 
-### `freqandsee.py`
+Requires Python >= 3.12.
 
-Location: freqandsee.py
+```bash
+poetry install
+```
 
-#### Description
+## Quick Example
 
-#### Core Functionality
+```python
+import numpy as np
+from astropy import units as u
+from math import pi as π
+from freqandsee.freqandsee import Signal, MovingAverageFilter, SignalBundle
 
-Defines the primary classes and functions for signal processing.
+# Create a sine wave signal
+fs = 100 * u.kHz
+time = np.arange(0, 101) / fs
+fc = 3000 * u.hertz
+y = Signal(
+    x=time,
+    y=np.sin(2 * π * fc * time) * u.volt,
+    name="Aether sensor",
+    x_name="t",
+    y_name="Voltage",
+)
 
-#### Key Components
+# Filter it with a moving average (signal * filter uses operator overloading)
+h = MovingAverageFilter(n=8, name="MA")
+y_filtered = y * h
 
-FlexibleSignal & Signal:
-Base classes that represent time-series signals with x (typically time) and y (data) components. They handle units, metadata, plotting, and basic statistical calculations (e.g., RMS, variance).
+# Plot both together
+SignalBundle([y, y_filtered]).plot()
+```
 
-Signal Subclasses:
-Specialized signal types like WhiteNoise, FlickerNoise, and others generate or manipulate specific types of signals.
+## Library Overview
 
-Filters:
-Implements several filtering classes such as LinearFilter, MovingAverageFilter, AllanFilter, BarnesFilter, and FilterBank. These classes enable filtering operations, frequency response analysis, and conversion between continuous and discrete representations (e.g., bilinear transform).
+All core code lives in `src/freqandsee/freqandsee.py`.
 
-#### Utility Functions
+### Signal Class Hierarchy
 
-Contains helper functions (e.g., bilinear transformation, Hollos method, and unit handling) that support signal processing and ensure proper unit management.
+- **FlexibleSignal** — Base class for x-y data with astropy units and metadata. Handles plotting, statistics (RMS, variance), and unit management.
+  - **Signal** — Strict time-series: uniformly spaced, monotonically increasing x values.
+    - **DatedSignal** — Signal with date information.
+    - **ImpulseResponse** — Impulse response signals.
+    - **PSDSignal** — Power Spectral Density signals.
+    - **OneSignal** — Unit amplitude signal.
+    - **SineSignal** — Sine wave generation.
+    - **WhiteNoise** — White noise with specified PSD.
+    - **FlickerNoise** — Flicker (pink) noise generation.
+    - **FrequencyResponseSignal** — Frequency domain representation.
+
+### Filter Hierarchy
+
+- **Filter** — Abstract base class.
+  - **LinearFilter** — General linear filtering with b, a coefficients. Supports frequency response analysis and bilinear transform.
+    - **MovingAverageFilter** — Moving average filtering.
+    - **FBMFlickerFilter** — Fractional Brownian Motion flicker filter.
+    - **BarnesFilter** — Barnes bilinear filter.
+    - **AllanFilter** — Allan variance filter.
+    - **PVarFilter** — Power variance filter.
+    - **SimpleIntegrator** — Integration filter.
+  - **FilterBank** — Applies multiple filters collectively.
+
+### Utilities
+
+- **SignalBundle** — Container for multiple signals with collective plotting and analysis.
+- **bilinear_transform()** — Bilinear transformation on poles.
+- **hollos()** — Transfer function computation using the Hollos method.
+- **dimensionless()** — Convert astropy quantities to dimensionless values.
 
 ## Demo Notebooks
 
-### Basic Demo Notebook
-
-[Notebook](demo_notebooks/basic_demo.ipynb)
-
-#### Description
-
-Provides a basic example of how to use the freqandsee library by:
-
-Generating and plotting a sine wave signal.
-Instantiating a MovingAverageFilter and examining its frequency response.
-Displaying key properties of the signals (like RMS) and analyzing them.
-
-Additional Features:
-Explores other aspects of the library, such as creating white noise and possibly flicker noise signals, and performing operations like FFT and PSD estimation on the signals.
-
-### Filtering Demo Notebook
-
-[Notebook](demo_notebooks/filtering_demo.ipynb)
-
-#### Description
-
-Low-Pass Filter Implementation:
-Shows how to design a low-pass filter with a cutoff frequency (e.g., 5 kHz) using concepts like the bilinear transform.
-
-Signal Processing:
-A sine wave signal is generated and filtered using the designed LinearFilter. The notebook:
-
-Plots the frequency response of the filter.
-Filters the signal.
-Displays both the original and filtered signals using a SignalBundle for easy comparison.
-
-### Allan Variance White Noise Demo Notebook
-
-[Notebook](demo_notebooks/allan_variance_white_noise_demo.ipynb)
-
-Description:
-
-White Noise Generation:
-Demonstrates creating a white noise signal with a specified power spectral density (PSD).
-
-Allan Filter Usage:
-Applies an AllanFilter to the white noise signal. This example shows how filtering can be used to compute Allan variance, which is inversely proportional to the moving average length in the filter.
-
-Filter Bank:
-A filter bank composed of Allan filters of increasing lengths is created. The notebook filters the white noise signal through this bank and obtains the RMS values of the filtered signals to analyze noise characteristics.
-
-### Import Export Demo Notebook
-
-[Notebook](demo_notebook/import_export_demo.ipynb)
-
-#### Description
-
-Signal Creation:
-Creates a sine wave signal that simulates sensor data (e.g., "Aether sensor") with astropy units.
-
-Exporting to CSV:
-Illustrates how to export a signal to CSV while including a header with metadata such as units and signal names.
-
-Importing Signals:
-Demonstrates importing signal data back from CSV files in three different scenarios:
-
-With a header that includes units.
-Without a header (resulting in a unitless signal).
-Without a header but with user-specified units during import.
+- [Basic demo](demo_notebooks/basic_demo.ipynb) — Sine wave creation, MovingAverageFilter frequency response, signal properties (RMS), FFT and PSD estimation.
+- [Filtering demo](demo_notebooks/filtering_demo.ipynb) — Low-pass filter design with bilinear transform, signal filtering with LinearFilter, before/after comparison via SignalBundle.
+- [Allan variance white noise demo](demo_notebooks/allan_variance_white_noise_demo.ipynb) — White noise generation with specified PSD, Allan variance computation via AllanFilter, FilterBank usage for noise characterization.
+- [Import/export demo](demo_notebooks/import_export_demo.ipynb) — CSV export with unit/metadata headers, import with and without headers, user-specified units on import.
